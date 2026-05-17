@@ -14,6 +14,8 @@ FAKE_PCM = struct.pack("<4h", 0, 100, -100, 200)
 def make_provider(pcm: bytes = FAKE_PCM) -> MagicMock:
     p = MagicMock()
     p.synthesize.return_value = pcm
+    p.__enter__.return_value = p
+    p.__exit__.return_value = None
     return p
 
 

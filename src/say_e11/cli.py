@@ -12,7 +12,7 @@ def _resolve_text(args: argparse.Namespace) -> str:
         return " ".join(args.text)
     if args.file:
         try:
-            return Path(args.file).read_text()
+            return Path(args.file).read_text(encoding="utf-8")
         except OSError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
@@ -49,15 +49,18 @@ def main() -> None:
         sys.exit(1)
 
     provider_name, key = pick_provider(args.provider)
-    provider = build_provider(provider_name, key)
-
-    try:
-        pcm = provider.synthesize(text, args.voice, args.rate)
-    except RuntimeError as e:
-        print(str(e), file=sys.stderr)
-        sys.exit(1)
+    with build_provider(provider_name, key) as provider:
+        try:
+            pcm = provider.synthesize(text, args.voice, args.rate)
+        except RuntimeError as e:
+            print(str(e), file=sys.stderr)
+            sys.exit(1)
 
     if args.output:
-        write_wav(pcm, args.output)
+        try:
+            write_wav(pcm, args.output)
+        except OSError as e:
+            print(f"Error writing output: {e}", file=sys.stderr)
+            sys.exit(1)
 
     play_pcm(pcm)
