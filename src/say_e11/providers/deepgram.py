@@ -12,6 +12,16 @@ class DeepgramProvider:
         self._owns_client = client is None
         self._client = client or httpx.Client()
 
+    def close(self) -> None:
+        if self._owns_client:
+            self._client.close()
+
+    def __enter__(self) -> "DeepgramProvider":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
     def synthesize(self, text: str, voice: str | None, rate: int) -> bytes:
         model = voice or DEFAULT_VOICE
         if rate != _BASE_RATE:
@@ -24,7 +34,7 @@ class DeepgramProvider:
             params={
                 "model": model,
                 "encoding": "linear16",
-                "sample_rate": "24000",
+                "sample_rate": 24000,
                 "container": "none",
             },
             headers={"Authorization": f"Token {self._key}"},
@@ -34,13 +44,3 @@ class DeepgramProvider:
         if r.status_code != 200:
             raise RuntimeError(f"Deepgram error {r.status_code}: {r.text[:200]}")
         return r.content
-
-    def close(self) -> None:
-        if self._owns_client:
-            self._client.close()
-
-    def __enter__(self) -> "DeepgramProvider":
-        return self
-
-    def __exit__(self, *_: object) -> None:
-        self.close()
