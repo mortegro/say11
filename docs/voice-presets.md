@@ -1,19 +1,8 @@
 ---
 title: Voice Presets
-nav_order: 5
 ---
 
 # Voice Presets
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## ElevenLabs presets
 
@@ -37,8 +26,6 @@ Names are case-insensitive (`Rachel`, `rachel`, and `RACHEL` all work).
 say --list-voices    # print this table from the terminal
 ```
 
----
-
 ## Using a raw voice ID
 
 If you have a custom voice or a voice not in the preset list, pass its ID
@@ -50,8 +37,6 @@ say --set voice EXAVITQu4vr4xnSDxMaL
 ```
 
 Any string that is not a recognized preset name is passed through as a raw ID.
-
----
 
 ## Deepgram voices
 
@@ -68,8 +53,6 @@ The default Deepgram model is `aura-2-thalia-en`.
 Refer to the
 [Deepgram voice catalogue](https://developers.deepgram.com/docs/tts-models)
 for a full list of available models.
-
----
 
 ## Setting a default voice
 

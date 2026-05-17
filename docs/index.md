@@ -1,19 +1,10 @@
----
-title: Home
-layout: home
-nav_order: 1
----
-
 # say-e11
 
-{: .fs-6 .fw-300 }
 A `uv`-installable CLI that brings macOS `say` to Linux, powered by
 [ElevenLabs](https://elevenlabs.io) or [Deepgram](https://deepgram.com).
 
-[Get started](#quick-start){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
-[View on GitHub](https://github.com/youruser/say-e11){: .btn .fs-5 .mb-4 .mb-md-0 }
-
----
+[Get started](#quick-start){ .md-button .md-button--primary }
+[View on GitHub](https://github.com/youruser/say-e11){ .md-button }
 
 ## What it does
 
@@ -60,8 +51,6 @@ DEEPGRAM_API_KEY=...
 ```bash
 say "It works"
 ```
-
----
 
 ## Key features
 

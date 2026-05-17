@@ -1,19 +1,8 @@
 ---
 title: Usage
-nav_order: 3
 ---
 
 # Usage
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Synopsis
 
@@ -22,8 +11,6 @@ say [TEXT ...] [-f FILE] [-o PATH] [-v NAME] [-r WPM]
     [--provider {elevenlabs,deepgram}]
     [--set KEY VALUE] [--list-voices] [--show-config]
 ```
-
----
 
 ## Text input
 
@@ -54,8 +41,6 @@ say -f notes.txt
 say -f /tmp/announcement.txt
 ```
 
----
-
 ## Flags reference
 
 ### `-v, --voice NAME`
@@ -69,7 +54,7 @@ say -v josh "Hello"
 say -v EXAVITQu4vr4xnSDxMaL "Hello"   # raw ElevenLabs ID
 ```
 
-See [Voice Presets](voice-presets) for the full list of named voices.
+See [Voice Presets](voice-presets.md) for the full list of named voices.
 
 ### `-r, --rate WPM`
 
@@ -80,9 +65,9 @@ say -r 120 "Speaking slowly"
 say -r 250 "Speaking quickly"
 ```
 
-{: .note }
-Deepgram does not support rate control. If you use `-r` with Deepgram, a
-warning is printed and the audio plays at normal speed.
+!!! note
+    Deepgram does not support rate control. If you use `-r` with Deepgram, a
+    warning is printed and the audio plays at normal speed.
 
 ElevenLabs maps the rate to a speed factor (`rate / 175`, clamped to 0.7–1.2×).
 
@@ -110,7 +95,7 @@ say --provider elevenlabs "Using ElevenLabs"
 ### `--set KEY VALUE`
 
 Save a default setting to `~/.say-e11/config.json`. See
-[Configuration](configuration) for details.
+[Configuration](configuration.md) for details.
 
 ```bash
 say --set voice bella
@@ -146,8 +131,6 @@ say --show-config
   rate = 200
 ```
 
----
-
 ## Exit codes
 
 | Code | Meaning |
@@ -156,8 +139,6 @@ say --show-config
 | `1` | Error (no text, no API key, HTTP error, bad output path, etc.) |
 
 Error messages are always written to **stderr**.
-
----
 
 ## Examples
 

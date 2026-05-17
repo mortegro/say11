@@ -1,19 +1,8 @@
 ---
 title: Configuration
-nav_order: 4
 ---
 
 # Configuration
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Priority order
 
@@ -25,8 +14,6 @@ Settings are resolved in this order (highest to lowest priority):
 4. **Home `.env`** — `~/.env`
 5. **Saved defaults** — `~/.say-e11/config.json` set via `--set`
 6. **Hardcoded defaults** — rate 175, Rachel voice, ElevenLabs first
-
----
 
 ## API keys
 
@@ -54,8 +41,6 @@ When both keys are present, **ElevenLabs is used**. Override with:
 say --set provider deepgram     # persist for all future calls
 say --provider deepgram "once"  # override for one call
 ```
-
----
 
 ## Saved defaults
 
@@ -111,8 +96,6 @@ Remove specific keys by editing the file, or delete it entirely:
 ```bash
 rm ~/.say-e11/config.json
 ```
-
----
 
 ## Example: per-project setup
 

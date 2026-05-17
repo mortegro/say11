@@ -21,7 +21,7 @@ say = "say_e11.cli:main"
 packages = ["src/say_e11"]
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "mkdocs-material>=9.6"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

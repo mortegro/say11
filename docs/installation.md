@@ -1,19 +1,8 @@
 ---
 title: Installation
-nav_order: 2
 ---
 
 # Installation
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Requirements
 
@@ -23,8 +12,6 @@ nav_order: 2
 | [uv](https://docs.astral.sh/uv/) | any recent version |
 | PortAudio | system package |
 | API key | ElevenLabs **or** Deepgram |
-
----
 
 ## 1. Install PortAudio
 
@@ -44,8 +31,6 @@ sudo dnf install portaudio
 # macOS (Homebrew)
 brew install portaudio
 ```
-
----
 
 ## 2. Install say-e11
 
@@ -71,8 +56,6 @@ uv sync               # install runtime + dev deps into .venv
 uv tool install --editable .
 ```
 
----
-
 ## 3. Verify
 
 ```bash
@@ -91,8 +74,6 @@ Text-to-speech CLI (ElevenLabs / Deepgram)
 ...
 ```
 
----
-
 ## Updating
 
 ```bash
@@ -105,8 +86,6 @@ Or for a local clone:
 git pull
 uv tool install --editable .
 ```
-
----
 
 ## Uninstalling
 
