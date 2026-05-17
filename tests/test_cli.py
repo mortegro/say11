@@ -24,6 +24,11 @@ def no_audio(monkeypatch):
     monkeypatch.setattr("say_e11.cli.play_pcm", lambda pcm: None)
 
 
+@pytest.fixture(autouse=True)
+def no_settings(monkeypatch):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {})
+
+
 def test_text_from_positional_args(monkeypatch):
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say", "hello", "world"])
@@ -116,3 +121,64 @@ def test_missing_file_exits(monkeypatch, tmp_path):
     monkeypatch.setattr("sys.argv", ["say", "-f", str(tmp_path / "missing.txt")])
     with pytest.raises(SystemExit):
         main()
+
+
+def test_list_voices_prints_presets(monkeypatch, capsys):
+    monkeypatch.setattr("sys.argv", ["say", "--list-voices"])
+    main()
+    out = capsys.readouterr().out
+    assert "rachel" in out
+    assert "bella" in out
+    assert "21m00Tcm4TlvDq8ikWAM" in out
+
+
+def test_show_config_empty(monkeypatch, capsys):
+    monkeypatch.setattr("sys.argv", ["say", "--show-config"])
+    main()
+    assert "No defaults" in capsys.readouterr().out
+
+
+def test_show_config_with_settings(monkeypatch, capsys):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella", "rate": 200})
+    monkeypatch.setattr("sys.argv", ["say", "--show-config"])
+    main()
+    out = capsys.readouterr().out
+    assert "voice" in out
+    assert "bella" in out
+
+
+def test_set_saves_to_config(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["say", "--set", "voice", "rachel"])
+    with patch("say_e11.cli.save_key") as mock_save:
+        main()
+    mock_save.assert_called_once_with("voice", "rachel")
+
+
+def test_settings_voice_used_as_default(monkeypatch):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella"})
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    provider.synthesize.assert_called_once_with("hello", "bella", 175)
+
+
+def test_cli_voice_overrides_settings(monkeypatch):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella"})
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "-v", "josh", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    provider.synthesize.assert_called_once_with("hello", "josh", 175)
+
+
+def test_settings_rate_used_as_default(monkeypatch):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"rate": 200})
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    provider.synthesize.assert_called_once_with("hello", None, 200)
