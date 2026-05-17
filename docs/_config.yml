@@ -1,0 +1,24 @@
+title: say-e11
+description: TTS CLI replicating macOS say — powered by ElevenLabs or Deepgram
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+
+url: ""
+
+color_scheme: light
+
+search_enabled: true
+search:
+  heading_level: 3
+  previews: 3
+
+nav_sort: order
+
+footer_content: >
+  say-e11 &mdash; MIT License &mdash;
+  <a href="https://github.com/youruser/say-e11">GitHub</a>
+
+# Exclude internal planning docs from the built site
+exclude:
+  - superpowers/
+  - Gemfile
+  - Gemfile.lock
