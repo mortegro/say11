@@ -5,8 +5,23 @@ from pathlib import Path
 from say_e11.audio import play_pcm, write_wav
 from say_e11.config import pick_provider
 from say_e11.providers import build_provider
-from say_e11.providers.elevenlabs import VOICE_PRESETS
+from say_e11.providers.deepgram import VOICE_PRESETS as DEEPGRAM_PRESETS
+from say_e11.providers.elevenlabs import VOICE_PRESETS as ELEVENLABS_PRESETS
 from say_e11.settings import load as load_settings, save_key
+
+
+_PROVIDER_PRESETS = {
+    "elevenlabs": ELEVENLABS_PRESETS,
+    "deepgram": DEEPGRAM_PRESETS,
+}
+
+
+def _resolve_voice_index(voice: str, provider_name: str) -> str:
+    """If voice is a non-negative integer, map it to a preset name via modulo."""
+    if not voice.isdigit():
+        return voice
+    presets = list(_PROVIDER_PRESETS[provider_name].keys())
+    return presets[int(voice) % len(presets)]
 
 
 def _resolve_text(args: argparse.Namespace) -> str:
@@ -35,14 +50,15 @@ def main() -> None:
     parser.add_argument("text", nargs="*", help="Text to speak")
     parser.add_argument("-f", "--file", metavar="PATH", help="Read text from file")
     parser.add_argument("-o", "--output", metavar="PATH", help="Write audio to WAV file")
-    parser.add_argument("-V", "--voice", metavar="NAME", help="Voice name or ID (overrides default)")
+    parser.add_argument("-V", "--voice", metavar="NAME|N", help="Voice name, ID, or index number (wraps with modulo)")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print provider, key source, and voice to stderr")
     parser.add_argument(
         "-R", "--rate", type=int, default=None, metavar="WPM",
         help="Speaking rate in words per minute (default: 175)",
     )
     parser.add_argument(
-        "--provider", choices=["elevenlabs", "deepgram"], help="Force a provider",
+        "--provider", choices=["elevenlabs", "deepgram"],
+        help="Force a provider (auto-selects elevenlabs when both keys are present)",
     )
     parser.add_argument(
         "--set", nargs=2, metavar=("KEY", "VALUE"),
@@ -65,7 +81,10 @@ def main() -> None:
 
     if args.list_voices:
         print("ElevenLabs voice presets:")
-        for name, vid in VOICE_PRESETS.items():
+        for name, vid in ELEVENLABS_PRESETS.items():
+            print(f"  {name:<10} {vid}")
+        print("Deepgram voice presets:")
+        for name, vid in DEEPGRAM_PRESETS.items():
             print(f"  {name:<10} {vid}")
         return
 
@@ -76,6 +95,9 @@ def main() -> None:
         else:
             for k, v in cfg.items():
                 print(f"  {k} = {v}")
+        if "provider" not in cfg:
+            auto_name, _, _ = pick_provider(None)
+            print(f"  provider = {auto_name} (auto)")
         return
 
     # --- apply saved defaults (CLI flags override) ---
@@ -90,6 +112,8 @@ def main() -> None:
         sys.exit(1)
 
     provider_name, key, key_source = pick_provider(effective_provider)
+    if effective_voice is not None:
+        effective_voice = _resolve_voice_index(effective_voice, provider_name)
     if args.verbose:
         print(f"provider: {provider_name}", file=sys.stderr)
         print(f"api key:  {key_source}", file=sys.stderr)

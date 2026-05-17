@@ -1,6 +1,6 @@
 import httpx
 import pytest
-from say_e11.providers.deepgram import DeepgramProvider
+from say_e11.providers.deepgram import DeepgramProvider, resolve_voice, VOICE_PRESETS
 
 FAKE_PCM = b"\x00\x01" * 100
 
@@ -80,3 +80,27 @@ def test_synthesize_raises_on_http_error():
     p = DeepgramProvider("key-abc", client=client)
     with pytest.raises(RuntimeError, match="Deepgram error 401"):
         p.synthesize("hello", None, 175)
+
+
+def test_resolve_voice_none_returns_default():
+    assert resolve_voice(None) == "aura-2-thalia-en"
+
+
+def test_resolve_voice_preset_name():
+    assert resolve_voice("zeus") == "aura-2-zeus-en"
+    assert resolve_voice("ORPHEUS") == "aura-2-orpheus-en"
+
+
+def test_resolve_voice_passthrough_unknown():
+    assert resolve_voice("aura-2-custom-en") == "aura-2-custom-en"
+
+
+def test_voice_presets_has_ten_entries():
+    assert len(VOICE_PRESETS) == 10
+
+
+def test_synthesize_resolves_preset_name():
+    t = CaptureTransport()
+    p = DeepgramProvider("key-abc", client=httpx.Client(transport=t))
+    p.synthesize("hello", "zeus", 175)
+    assert "aura-2-zeus-en" in str(t.requests[0].url)

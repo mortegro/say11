@@ -5,6 +5,25 @@ import httpx
 DEFAULT_VOICE = "aura-2-thalia-en"
 _BASE_RATE = 175
 
+VOICE_PRESETS: dict[str, str] = {
+    "thalia":   "aura-2-thalia-en",
+    "asteria":  "aura-2-asteria-en",
+    "luna":     "aura-2-luna-en",
+    "aurora":   "aura-2-aurora-en",
+    "athena":   "aura-2-athena-en",
+    "zeus":     "aura-2-zeus-en",
+    "orion":    "aura-2-orion-en",
+    "orpheus":  "aura-2-orpheus-en",
+    "apollo":   "aura-2-apollo-en",
+    "hermes":   "aura-2-hermes-en",
+}
+
+
+def resolve_voice(voice: str | None) -> str:
+    if voice is None:
+        return DEFAULT_VOICE
+    return VOICE_PRESETS.get(voice.lower(), voice)
+
 
 class DeepgramProvider:
     def __init__(self, api_key: str, *, client: httpx.Client | None = None) -> None:
@@ -23,7 +42,7 @@ class DeepgramProvider:
         self.close()
 
     def synthesize(self, text: str, voice: str | None, rate: int) -> bytes:
-        model = voice or DEFAULT_VOICE
+        model = resolve_voice(voice)
         if rate != _BASE_RATE:
             print(
                 f"Warning: Deepgram does not support rate control; ignoring -r {rate}",

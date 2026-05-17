@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from say_e11.cli import main
+from say_e11.cli import main, _resolve_voice_index
 
 FAKE_PCM = struct.pack("<4h", 0, 100, -100, 200)
 
@@ -130,21 +130,38 @@ def test_list_voices_prints_presets(monkeypatch, capsys):
     assert "rachel" in out
     assert "bella" in out
     assert "21m00Tcm4TlvDq8ikWAM" in out
+    assert "thalia" in out
+    assert "aura-2-zeus-en" in out
 
 
 def test_show_config_empty(monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["say", "--show-config"])
-    main()
-    assert "No defaults" in capsys.readouterr().out
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "~/.env")):
+        main()
+    out = capsys.readouterr().out
+    assert "No defaults" in out
+    assert "elevenlabs" in out
+    assert "(auto)" in out
 
 
 def test_show_config_with_settings(monkeypatch, capsys):
     monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella", "rate": 200})
     monkeypatch.setattr("sys.argv", ["say", "--show-config"])
-    main()
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "~/.env")):
+        main()
     out = capsys.readouterr().out
     assert "voice" in out
     assert "bella" in out
+    assert "elevenlabs" in out
+
+
+def test_show_config_hides_auto_when_provider_set(monkeypatch, capsys):
+    monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"provider": "deepgram"})
+    monkeypatch.setattr("sys.argv", ["say", "--show-config"])
+    main()
+    out = capsys.readouterr().out
+    assert "(auto)" not in out
+    assert "deepgram" in out
 
 
 def test_set_saves_to_config(monkeypatch):
@@ -206,3 +223,50 @@ def test_verbose_default_voice_label(monkeypatch, capsys):
     assert "deepgram" in err
     assert "~/.env" in err
     assert "(default)" in err
+
+
+# --- voice index resolution ---
+
+def test_resolve_voice_index_passthrough_name():
+    assert _resolve_voice_index("rachel", "elevenlabs") == "rachel"
+
+
+def test_resolve_voice_index_zero():
+    assert _resolve_voice_index("0", "elevenlabs") == "rachel"
+    assert _resolve_voice_index("0", "deepgram") == "thalia"
+
+
+def test_resolve_voice_index_within_range():
+    assert _resolve_voice_index("1", "elevenlabs") == "bella"
+    assert _resolve_voice_index("1", "deepgram") == "asteria"
+
+
+def test_resolve_voice_index_wraps_with_modulo():
+    # 10 presets each; index 10 wraps to 0
+    assert _resolve_voice_index("10", "elevenlabs") == "rachel"
+    assert _resolve_voice_index("10", "deepgram") == "thalia"
+    assert _resolve_voice_index("11", "deepgram") == "asteria"
+
+
+def test_resolve_voice_large_index_wraps():
+    assert _resolve_voice_index("999", "elevenlabs") == _resolve_voice_index(
+        str(999 % 10), "elevenlabs"
+    )
+
+
+def test_voice_index_passed_to_provider(monkeypatch):
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "-V", "1", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    provider.synthesize.assert_called_once_with("hello", "bella", 175)
+
+
+def test_voice_index_deepgram_wraps(monkeypatch):
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "-V", "10", "--provider", "deepgram", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("deepgram", "key", "process environment")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    provider.synthesize.assert_called_once_with("hello", "thalia", 175)
