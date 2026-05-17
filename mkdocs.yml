@@ -26,5 +26,8 @@ nav:
     - Configuration: configuration.md
     - Voice Presets: voice-presets.md
 
+markdown_extensions:
+  - attr_list
+
 exclude_docs: |
   superpowers/
