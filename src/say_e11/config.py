@@ -23,21 +23,38 @@ def load_env(
             os.environ[k] = v
 
 
-def pick_provider(forced: str | None = None) -> tuple[str, str]:
+def pick_provider(forced: str | None = None) -> tuple[str, str, str]:
+    pre_env = set(os.environ.keys())
+    local_vals = dotenv_values(Path(".env"))
+    home_vals = dotenv_values(Path.home() / ".env")
+
     load_env()
+
+    def _source(env_var: str) -> str:
+        if env_var in pre_env:
+            return "process environment"
+        if local_vals.get(env_var):
+            return "./.env"
+        if home_vals.get(env_var):
+            return "~/.env"
+        return "process environment"
+
     if forced is not None:
         if forced not in _KEY_MAP:
             print(f"Error: unknown provider '{forced}'", file=sys.stderr)
             sys.exit(1)
-        key = os.environ.get(_KEY_MAP[forced])
+        env_var = _KEY_MAP[forced]
+        key = os.environ.get(env_var)
         if not key:
             print(f"Error: no API key for provider '{forced}'", file=sys.stderr)
             sys.exit(1)
-        return forced, key
+        return forced, key, _source(env_var)
+
     for name, env_var in _KEY_MAP.items():
         key = os.environ.get(env_var)
         if key:
-            return name, key
+            return name, key, _source(env_var)
+
     print(
         "Error: no API key found. Set ELEVENLABS_API_KEY or DEEPGRAM_API_KEY"
         " in ./.env or ~/.env",

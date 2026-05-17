@@ -32,7 +32,7 @@ def no_settings(monkeypatch):
 def test_text_from_positional_args(monkeypatch):
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say", "hello", "world"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("hello world", None, 175)
@@ -42,7 +42,7 @@ def test_text_from_stdin(monkeypatch):
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say"])
     monkeypatch.setattr("sys.stdin", io.StringIO("piped text"))
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("piped text", None, 175)
@@ -53,7 +53,7 @@ def test_text_from_file(monkeypatch, tmp_path):
     f = tmp_path / "text.txt"
     f.write_text("file content")
     monkeypatch.setattr("sys.argv", ["say", "-f", str(f)])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("file content", None, 175)
@@ -63,7 +63,7 @@ def test_output_writes_wav(monkeypatch, tmp_path):
     provider = make_provider()
     out = tmp_path / "out.wav"
     monkeypatch.setattr("sys.argv", ["say", "-o", str(out), "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     assert out.exists()
@@ -74,8 +74,8 @@ def test_output_writes_wav(monkeypatch, tmp_path):
 
 def test_voice_and_rate_passed_through(monkeypatch):
     provider = make_provider()
-    monkeypatch.setattr("sys.argv", ["say", "-v", "my-voice", "-r", "200", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    monkeypatch.setattr("sys.argv", ["say", "-V", "my-voice", "-R", "200", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("hello", "my-voice", 200)
@@ -84,7 +84,7 @@ def test_voice_and_rate_passed_through(monkeypatch):
 def test_provider_flag_forwarded(monkeypatch):
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say", "--provider", "deepgram", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("deepgram", "key")) as mock_pick:
+    with patch("say_e11.cli.pick_provider", return_value=("deepgram", "key", "process environment")) as mock_pick:
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     mock_pick.assert_called_once_with("deepgram")
@@ -94,7 +94,7 @@ def test_provider_error_exits(monkeypatch):
     provider = make_provider()
     provider.synthesize.side_effect = RuntimeError("API error")
     monkeypatch.setattr("sys.argv", ["say", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             with pytest.raises(SystemExit):
                 main()
@@ -158,7 +158,7 @@ def test_settings_voice_used_as_default(monkeypatch):
     monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella"})
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("hello", "bella", 175)
@@ -167,8 +167,8 @@ def test_settings_voice_used_as_default(monkeypatch):
 def test_cli_voice_overrides_settings(monkeypatch):
     monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"voice": "bella"})
     provider = make_provider()
-    monkeypatch.setattr("sys.argv", ["say", "-v", "josh", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    monkeypatch.setattr("sys.argv", ["say", "-V", "josh", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("hello", "josh", 175)
@@ -178,7 +178,31 @@ def test_settings_rate_used_as_default(monkeypatch):
     monkeypatch.setattr("say_e11.cli.load_settings", lambda: {"rate": 200})
     provider = make_provider()
     monkeypatch.setattr("sys.argv", ["say", "hello"])
-    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key")):
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "process environment")):
         with patch("say_e11.cli.build_provider", return_value=provider):
             main()
     provider.synthesize.assert_called_once_with("hello", None, 200)
+
+
+def test_verbose_prints_provider_key_source_voice(monkeypatch, capsys):
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "-v", "-V", "rachel", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("elevenlabs", "key", "./.env")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    err = capsys.readouterr().err
+    assert "elevenlabs" in err
+    assert "./.env" in err
+    assert "rachel" in err
+
+
+def test_verbose_default_voice_label(monkeypatch, capsys):
+    provider = make_provider()
+    monkeypatch.setattr("sys.argv", ["say", "-v", "hello"])
+    with patch("say_e11.cli.pick_provider", return_value=("deepgram", "key", "~/.env")):
+        with patch("say_e11.cli.build_provider", return_value=provider):
+            main()
+    err = capsys.readouterr().err
+    assert "deepgram" in err
+    assert "~/.env" in err
+    assert "(default)" in err

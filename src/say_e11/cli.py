@@ -35,9 +35,10 @@ def main() -> None:
     parser.add_argument("text", nargs="*", help="Text to speak")
     parser.add_argument("-f", "--file", metavar="PATH", help="Read text from file")
     parser.add_argument("-o", "--output", metavar="PATH", help="Write audio to WAV file")
-    parser.add_argument("-v", "--voice", metavar="NAME", help="Voice name or ID (overrides default)")
+    parser.add_argument("-V", "--voice", metavar="NAME", help="Voice name or ID (overrides default)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print provider, key source, and voice to stderr")
     parser.add_argument(
-        "-r", "--rate", type=int, default=None, metavar="WPM",
+        "-R", "--rate", type=int, default=None, metavar="WPM",
         help="Speaking rate in words per minute (default: 175)",
     )
     parser.add_argument(
@@ -88,7 +89,11 @@ def main() -> None:
         print("Error: text is empty", file=sys.stderr)
         sys.exit(1)
 
-    provider_name, key = pick_provider(effective_provider)
+    provider_name, key, key_source = pick_provider(effective_provider)
+    if args.verbose:
+        print(f"provider: {provider_name}", file=sys.stderr)
+        print(f"api key:  {key_source}", file=sys.stderr)
+        print(f"voice:    {effective_voice or '(default)'}", file=sys.stderr)
     with build_provider(provider_name, key) as provider:
         try:
             pcm = provider.synthesize(text, effective_voice, effective_rate)
